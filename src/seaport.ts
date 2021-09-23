@@ -856,7 +856,7 @@ export class OpenSeaPort {
         accountAddress: string;
         recipientAddress?: string;
         referrerAddress?: string; }
-    ): Promise<string> {
+    ): Promise<WyvernAtomicMatchParameters> {
     const matchingOrder = this._makeMatchingOrder({
       order,
       accountAddress,
@@ -866,13 +866,13 @@ export class OpenSeaPort {
     const { buy, sell } = assignOrdersToSides(order, matchingOrder)
 
     const metadata = this._getMetadata(order, referrerAddress)
-    const transactionHash = await this._atomicMatch({ buy, sell, accountAddress, metadata })
+    return await this._atomicMatch({ buy, sell, accountAddress, metadata })
 
-    await this._confirmTransaction(transactionHash, EventType.MatchOrders, "Fulfilling order", async () => {
+    /*await this._confirmTransaction(transactionHash, EventType.MatchOrders, "Fulfilling order", async () => {
       const isOpen = await this._validateOrder(order)
       return !isOpen
     })
-    return transactionHash
+    return transactionHash*/
   }
 
   /**
@@ -2900,7 +2900,6 @@ export class OpenSeaPort {
 
     this._dispatch(EventType.MatchOrders, { buy, sell, accountAddress, matchMetadata: metadata })
 
-    let txHash
     const txnData: any = { from: accountAddress, value }
     const args: WyvernAtomicMatchParameters = [
       [buy.exchange, buy.maker, buy.taker, buy.feeRecipient, buy.target,
@@ -2926,8 +2925,10 @@ export class OpenSeaPort {
       ]
     ]
 
+    return args
+
     // Estimate gas first
-    try {
+    /*try {
       // Typescript splat doesn't typecheck
       const gasEstimate = await this._wyvernProtocolReadOnly.wyvernExchange.atomicMatch_.estimateGasAsync(args[0], args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], txnData)
 
@@ -2953,7 +2954,7 @@ export class OpenSeaPort {
           : 'user denied'
         }..."`)
     }
-    return txHash
+    return txHash*/
   }
 
   private async _getRequiredAmountForTakingSellOrder(sell: Order) {
